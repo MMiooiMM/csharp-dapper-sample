@@ -1,12 +1,28 @@
 ﻿using System;
+using System.Data.SqlClient;
+using System.Threading.Tasks;
+using Dapper;
+using DapperDemo.Model;
 
 namespace DapperDemo
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            await Sample1EasyQuery();
+        }
+
+        private static async Task Sample1EasyQuery()
+        {
+            using var connection = new SqlConnection("Server=.;Database=Northwind;Integrated Security=True;");
+
+            string query = "SELECT TOP 5 * FROM Customers;";
+            var customers = await connection.QueryAsync<Customer>(query);
+            foreach (var customer in customers)
+            {
+                Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+            }
         }
     }
 }
