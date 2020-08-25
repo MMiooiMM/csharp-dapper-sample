@@ -13,7 +13,7 @@ namespace DapperDemo
 
         private static async Task Main(string[] args)
         {
-            await Sample5QuerySingleAsync();
+            await Sample6QuerySingleOrDefaultAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -83,6 +83,24 @@ namespace DapperDemo
             var customer = await connection.QuerySingleAsync<Customer>(query, new { City = "London", PostalCode = "EC2 5NT" });
 
             Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+        }
+
+        private static async Task Sample6QuerySingleOrDefaultAsync()
+        {
+            Console.WriteLine("Sample6：QuerySingleOrDefault");
+            using var connection = new SqlConnection(connectionString);
+
+            string query = "SELECT * FROM Customers WHERE City = @City;";
+            var customer = await connection.QuerySingleOrDefaultAsync<Customer>(query, new { City = "London7" });
+
+            if(customer is null)
+            {
+                Console.WriteLine("Data NotFound");
+            }
+            else
+            {
+                Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+            }
         }
     }
 }
