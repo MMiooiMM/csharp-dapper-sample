@@ -13,7 +13,7 @@ namespace DapperDemo
 
         private static async Task Main(string[] args)
         {
-            await Sample7QueryMultipleAsync();
+            await Sample8ExecuteAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -93,7 +93,7 @@ namespace DapperDemo
             string query = "SELECT * FROM Customers WHERE City = @City;";
             var customer = await connection.QuerySingleOrDefaultAsync<Customer>(query, new { City = "London7" });
 
-            if(customer is null)
+            if (customer is null)
             {
                 Console.WriteLine("Data NotFound");
             }
@@ -123,6 +123,23 @@ namespace DapperDemo
                 }
                 Console.WriteLine($"Count: {customers.ToList().Count}");
             }
+        }
+
+        private static async Task Sample8ExecuteAsync()
+        {
+            Console.WriteLine("Sample8：ExecuteInsert");
+            using var connection = new SqlConnection(connectionString);
+
+            var data = new
+            {
+                CustomerID = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+                CompanyName = "Test Company"
+            };
+
+            string query = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
+            var result = await connection.ExecuteAsync(query, data);
+
+            Console.WriteLine($"Count: {result}");
         }
     }
 }
