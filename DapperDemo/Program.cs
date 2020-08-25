@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using DapperDemo.Model;
@@ -12,34 +13,47 @@ namespace DapperDemo
         private const string connectionString = "Server=.;Database=Northwind;Integrated Security=True;";
         private static async Task Main(string[] args)
         {
-            await Sample2ParameterQueryAsync();
+            await Sample3QueryFirstAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
         {
-            Console.WriteLine("範例一：簡易查詢");
+            Console.WriteLine("Sample1：EasyQuery");
             using var connection = new SqlConnection(connectionString);
 
-            string query = "SELECT TOP 5 * FROM Customers;";
+            string query = "SELECT * FROM Customers;";
             var customers = await connection.QueryAsync<Customer>(query);
             foreach (var customer in customers)
             {
                 Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
             }
+            Console.WriteLine($"Count: {customers.ToList().Count}");
         }
 
         private static async Task Sample2ParameterQueryAsync()
         {
-            Console.WriteLine("範例二：參數查詢");
+            Console.WriteLine("Sample2：ParameterQuery");
             using var connection = new SqlConnection(connectionString);
 
-            string query = "SELECT TOP 5 * FROM Customers WHERE CustomerID = @CustomerID;";
-            var customers = await connection.QueryAsync<Customer>(query, new { CustomerID = "BONAP" });
+            string query = "SELECT * FROM Customers WHERE City = @City;";
+            var customers = await connection.QueryAsync<Customer>(query, new { City = "London" });
 
             foreach (var customer in customers)
             {
                 Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
             }
+            Console.WriteLine($"Count: {customers.ToList().Count}");
+        }
+
+        private static async Task Sample3QueryFirstAsync()
+        {
+            Console.WriteLine("Sample3：QueryFirst");
+            using var connection = new SqlConnection(connectionString);
+
+            string query = "SELECT * FROM Customers WHERE City = @City;";
+            var customer = await connection.QueryFirstAsync<Customer>(query, new { City = "London" });
+
+            Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
         }
     }
 }
