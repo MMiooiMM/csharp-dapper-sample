@@ -14,7 +14,7 @@ namespace DapperDemo
 
         private static async Task Main(string[] args)
         {
-            await Sample9ExecuteStoreProcedureAsync();
+            await Sample10ExecuteMultiInsertAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -52,7 +52,11 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customer = await connection.QueryFirstAsync<Customer>(query, new { City = "London" });
+            var customer = await connection.QueryFirstAsync<Customer>(query,
+                new
+                {
+                    City = "London"
+                });
 
             Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
         }
@@ -63,7 +67,11 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customer = await connection.QueryFirstOrDefaultAsync<Customer>(query, new { City = "London7" });
+            var customer = await connection.QueryFirstOrDefaultAsync<Customer>(query,
+                new
+                {
+                    City = "London7"
+                });
 
             if (customer is null)
             {
@@ -81,7 +89,12 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode;";
-            var customer = await connection.QuerySingleAsync<Customer>(query, new { City = "London", PostalCode = "EC2 5NT" });
+            var customer = await connection.QuerySingleAsync<Customer>(query,
+                new
+                {
+                    City = "London",
+                    PostalCode = "EC2 5NT"
+                });
 
             Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
         }
@@ -92,7 +105,11 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customer = await connection.QuerySingleOrDefaultAsync<Customer>(query, new { City = "London7" });
+            var customer = await connection.QuerySingleOrDefaultAsync<Customer>(query,
+                new
+                {
+                    City = "London7"
+                });
 
             if (customer is null)
             {
@@ -108,16 +125,18 @@ namespace DapperDemo
         {
             Console.WriteLine("Sample7：QueryMultiple");
             using var connection = new SqlConnection(connectionString);
-
             string query = "SELECT * FROM Customers WHERE City = @City;" +
                 "SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode;";
-
-            var result = await connection.QueryMultipleAsync(query, new { City = "London", PostalCode = "EC2 5NT" });
+            var result = await connection.QueryMultipleAsync(query,
+                new
+                {
+                    City = "London",
+                    PostalCode = "EC2 5NT"
+                });
 
             while (!result.IsConsumed)
             {
                 var customers = await result.ReadAsync<Customer>();
-
                 foreach (var customer in customers)
                 {
                     Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
@@ -126,7 +145,7 @@ namespace DapperDemo
             }
         }
 
-        private static async Task Sample8ExecuteAsync()
+        private static async Task Sample8ExecuteInsertAsync()
         {
             Console.WriteLine("Sample8：ExecuteInsert");
             using var connection = new SqlConnection(connectionString);
@@ -154,9 +173,35 @@ namespace DapperDemo
             parameters.Add("@CustomerID", "AROUT", DbType.String, ParameterDirection.Input);
             parameters.Add("@return_value", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
 
-            await connection.ExecuteAsync(storeProcedureName, parameters, commandType: CommandType.StoredProcedure);
+            await connection.ExecuteAsync(
+                storeProcedureName,
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
 
             var result = parameters.Get<int>("return_value");
+            Console.WriteLine($"Count: {result}");
+        }
+
+        private static async Task Sample10ExecuteMultiInsertAsync()
+        {
+            Console.WriteLine("Sample10：ExecuteMultiInsert");
+            using var connection = new SqlConnection(connectionString);
+
+            var data = new[] {
+                new {
+                    CustomerID = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+                    CompanyName = "Test Company"
+                },
+                new {
+                    CustomerID = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+                    CompanyName = "Test Company"
+                }
+            };
+
+            string query = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
+            var result = await connection.ExecuteAsync(query, data);
+
             Console.WriteLine($"Count: {result}");
         }
     }
