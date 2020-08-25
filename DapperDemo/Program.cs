@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,9 +10,10 @@ namespace DapperDemo
     internal class Program
     {
         private const string connectionString = "Server=.;Database=Northwind;Integrated Security=True;";
+
         private static async Task Main(string[] args)
         {
-            await Sample3QueryFirstAsync();
+            await Sample4QueryFirstOrDefaultAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -54,6 +54,24 @@ namespace DapperDemo
             var customer = await connection.QueryFirstAsync<Customer>(query, new { City = "London" });
 
             Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+        }
+
+        private static async Task Sample4QueryFirstOrDefaultAsync()
+        {
+            Console.WriteLine("Sample4：QueryFirst");
+            using var connection = new SqlConnection(connectionString);
+
+            string query = "SELECT * FROM Customers WHERE City = @City;";
+            var customer = await connection.QueryFirstOrDefaultAsync<Customer>(query, new { City = "London7" });
+
+            if (customer is null)
+            {
+                Console.WriteLine("Data NotFound");
+            }
+            else
+            {
+                Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+            }
         }
     }
 }
