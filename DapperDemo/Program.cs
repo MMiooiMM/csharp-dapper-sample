@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace DapperDemo
 
         private static async Task Main(string[] args)
         {
-            await Sample8ExecuteAsync();
+            await Sample9ExecuteStoreProcedureAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -139,6 +140,23 @@ namespace DapperDemo
             string query = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
             var result = await connection.ExecuteAsync(query, data);
 
+            Console.WriteLine($"Count: {result}");
+        }
+
+        private static async Task Sample9ExecuteStoreProcedureAsync()
+        {
+            Console.WriteLine("Sample9：ExecuteStoreProcedure");
+            using var connection = new SqlConnection(connectionString);
+
+            string storeProcedureName = "CustOrderHist";
+
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("@CustomerID", "AROUT", DbType.String, ParameterDirection.Input);
+            parameters.Add("@return_value", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
+
+            await connection.ExecuteAsync(storeProcedureName, parameters, commandType: CommandType.StoredProcedure);
+
+            var result = parameters.Get<int>("return_value");
             Console.WriteLine($"Count: {result}");
         }
     }
