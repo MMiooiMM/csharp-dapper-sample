@@ -13,7 +13,7 @@ namespace DapperDemo
 
         private static async Task Main(string[] args)
         {
-            await Sample6QuerySingleOrDefaultAsync();
+            await Sample7QueryMultipleAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -100,6 +100,28 @@ namespace DapperDemo
             else
             {
                 Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+            }
+        }
+
+        private static async Task Sample7QueryMultipleAsync()
+        {
+            Console.WriteLine("Sample7：QueryMultiple");
+            using var connection = new SqlConnection(connectionString);
+
+            string query = "SELECT * FROM Customers WHERE City = @City;" +
+                "SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode;";
+
+            var result = await connection.QueryMultipleAsync(query, new { City = "London", PostalCode = "EC2 5NT" });
+
+            while (!result.IsConsumed)
+            {
+                var customers = await result.ReadAsync<Customer>();
+
+                foreach (var customer in customers)
+                {
+                    Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
+                }
+                Console.WriteLine($"Count: {customers.ToList().Count}");
             }
         }
     }
