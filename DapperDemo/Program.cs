@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Dapper;
@@ -8,14 +9,16 @@ namespace DapperDemo
 {
     internal class Program
     {
+        private const string connectionString = "Server=.;Database=Northwind;Integrated Security=True;";
         private static async Task Main(string[] args)
         {
-            await Sample2ParameterQuery();
+            await Sample2ParameterQueryAsync();
         }
 
-        private static async Task Sample1EasyQuery()
+        private static async Task Sample1EasyQueryAsync()
         {
-            using var connection = new SqlConnection("Server=.;Database=Northwind;Integrated Security=True;");
+            Console.WriteLine("範例一：簡易查詢");
+            using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT TOP 5 * FROM Customers;";
             var customers = await connection.QueryAsync<Customer>(query);
@@ -25,9 +28,10 @@ namespace DapperDemo
             }
         }
 
-        private static async Task Sample2ParameterQuery()
+        private static async Task Sample2ParameterQueryAsync()
         {
-            using var connection = new SqlConnection("Server=.;Database=Northwind;Integrated Security=True;");
+            Console.WriteLine("範例二：參數查詢");
+            using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT TOP 5 * FROM Customers WHERE CustomerID = @CustomerID;";
             var customers = await connection.QueryAsync<Customer>(query, new { CustomerID = "BONAP" });
