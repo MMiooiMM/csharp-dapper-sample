@@ -5,15 +5,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using DapperDemo.Model;
+using Microsoft.Extensions.Configuration;
 
 namespace DapperDemo
 {
     internal class Program
     {
-        private const string connectionString = "Server=.;Database=Northwind;Integrated Security=True;";
+        private static string connectionString;
 
         private static async Task Main(string[] args)
         {
+            IConfiguration config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            connectionString = config.GetConnectionString("DefaultConnection");
+
             await Sample10ExecuteMultiInsertAsync();
         }
 
