@@ -21,7 +21,7 @@ namespace DapperDemo
 
             connectionString = config.GetConnectionString("DefaultConnection");
 
-            await Sample10ExecuteMultiInsertAsync();
+            await Sample12TransactionRollbackAsync();
         }
 
         private static async Task Sample1EasyQueryAsync()
@@ -210,6 +210,58 @@ namespace DapperDemo
             var result = await connection.ExecuteAsync(query, data);
 
             Console.WriteLine($"Count: {result}");
+        }
+
+        private static async Task Sample11TransactionCommitAsync()
+        {
+            Console.WriteLine("Sample11：TransactionCommit");
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            string executeString = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
+            string queryString = "SELECT * FROM Customers WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName";
+
+            var data = new
+            {
+                CustomerID = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+                CompanyName = "Test Company"
+            };
+
+            using var transaction = await connection.BeginTransactionAsync();
+            var insert = await connection.ExecuteAsync(executeString, data, transaction);
+            Console.WriteLine($"在交易中對 Customer 表插入 {insert} 筆資料。");
+            var customer = await connection.QueryAsync<Customer>(queryString, data, transaction);
+            Console.WriteLine($"在交易中查詢新增的資料：{customer.Count()} 筆。");
+            await transaction.CommitAsync();
+
+            customer = await connection.QueryAsync<Customer>(queryString, data);
+            Console.WriteLine($"在交易外查詢新增的資料：{customer.Count()} 筆。");
+        }
+
+        private static async Task Sample12TransactionRollbackAsync()
+        {
+            Console.WriteLine("Sample12：TransactionRollback");
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            string executeString = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
+            string queryString = "SELECT * FROM Customers WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName";
+
+            var data = new
+            {
+                CustomerID = Guid.NewGuid().ToString().Substring(0, 5).ToUpper(),
+                CompanyName = "Test Company"
+            };
+
+            using var transaction = await connection.BeginTransactionAsync();
+            var insert = await connection.ExecuteAsync(executeString, data, transaction);
+            Console.WriteLine($"在交易中對 Customer 表插入 {insert} 筆資料。");
+            var customer = await connection.QueryAsync<Customer>(queryString, data, transaction);
+            Console.WriteLine($"在交易中查詢新增的資料：{customer.Count()} 筆。");
+            await transaction.RollbackAsync();
+
+            customer = await connection.QueryAsync<Customer>(queryString, data);
+            Console.WriteLine($"在交易外查詢新增的資料：{customer.Count()} 筆。");
         }
     }
 }
