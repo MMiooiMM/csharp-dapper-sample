@@ -21,12 +21,12 @@ namespace DapperDemo
 
             connectionString = config.GetConnectionString("DefaultConnection");
 
-            await Sample12TransactionRollbackAsync();
+            await SampleConcurrencyAsync();
         }
 
-        private static async Task Sample1EasyQueryAsync()
+        private static async Task SampleEasyQueryAsync()
         {
-            Console.WriteLine("Sample1：EasyQuery");
+            Console.WriteLine(nameof(SampleEasyQueryAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers;";
@@ -38,9 +38,9 @@ namespace DapperDemo
             Console.WriteLine($"Count: {customers.ToList().Count}");
         }
 
-        private static async Task Sample2ParameterQueryAsync()
+        private static async Task SampleParameterQueryAsync()
         {
-            Console.WriteLine("Sample2：ParameterQuery");
+            Console.WriteLine(nameof(SampleParameterQueryAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
@@ -53,9 +53,9 @@ namespace DapperDemo
             Console.WriteLine($"Count: {customers.ToList().Count}");
         }
 
-        private static async Task Sample3QueryFirstAsync()
+        private static async Task SampleQueryFirstAsync()
         {
-            Console.WriteLine("Sample3：QueryFirst");
+            Console.WriteLine(nameof(SampleQueryFirstAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
@@ -68,9 +68,9 @@ namespace DapperDemo
             Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
         }
 
-        private static async Task Sample4QueryFirstOrDefaultAsync()
+        private static async Task SampleQueryFirstOrDefaultAsync()
         {
-            Console.WriteLine("Sample4：QueryFirst");
+            Console.WriteLine(nameof(SampleQueryFirstOrDefaultAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
@@ -90,9 +90,9 @@ namespace DapperDemo
             }
         }
 
-        private static async Task Sample5QuerySingleAsync()
+        private static async Task SampleQuerySingleAsync()
         {
-            Console.WriteLine("Sample5：QuerySingle");
+            Console.WriteLine(nameof(SampleQuerySingleAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode;";
@@ -106,9 +106,9 @@ namespace DapperDemo
             Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
         }
 
-        private static async Task Sample6QuerySingleOrDefaultAsync()
+        private static async Task SampleQuerySingleOrDefaultAsync()
         {
-            Console.WriteLine("Sample6：QuerySingleOrDefault");
+            Console.WriteLine(nameof(SampleQuerySingleOrDefaultAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
@@ -128,9 +128,9 @@ namespace DapperDemo
             }
         }
 
-        private static async Task Sample7QueryMultipleAsync()
+        private static async Task SampleQueryMultipleAsync()
         {
-            Console.WriteLine("Sample7：QueryMultiple");
+            Console.WriteLine(nameof(SampleQueryMultipleAsync));
             using var connection = new SqlConnection(connectionString);
             string query = "SELECT * FROM Customers WHERE City = @City;" +
                 "SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode;";
@@ -152,9 +152,9 @@ namespace DapperDemo
             }
         }
 
-        private static async Task Sample8ExecuteInsertAsync()
+        private static async Task SampleExecuteInsertAsync()
         {
-            Console.WriteLine("Sample8：ExecuteInsert");
+            Console.WriteLine(nameof(SampleExecuteInsertAsync));
             using var connection = new SqlConnection(connectionString);
 
             var data = new
@@ -169,30 +169,9 @@ namespace DapperDemo
             Console.WriteLine($"Count: {result}");
         }
 
-        private static async Task Sample9ExecuteStoreProcedureAsync()
+        private static async Task SampleExecuteMultiInsertAsync()
         {
-            Console.WriteLine("Sample9：ExecuteStoreProcedure");
-            using var connection = new SqlConnection(connectionString);
-
-            string storeProcedureName = "CustOrderHist";
-
-            DynamicParameters parameters = new DynamicParameters();
-            parameters.Add("@CustomerID", "AROUT", DbType.String, ParameterDirection.Input);
-            parameters.Add("@return_value", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
-
-            await connection.ExecuteAsync(
-                storeProcedureName,
-                parameters,
-                commandType: CommandType.StoredProcedure
-            );
-
-            var result = parameters.Get<int>("return_value");
-            Console.WriteLine($"Count: {result}");
-        }
-
-        private static async Task Sample10ExecuteMultiInsertAsync()
-        {
-            Console.WriteLine("Sample10：ExecuteMultiInsert");
+            Console.WriteLine(nameof(SampleExecuteMultiInsertAsync));
             using var connection = new SqlConnection(connectionString);
 
             var data = new[] {
@@ -212,14 +191,86 @@ namespace DapperDemo
             Console.WriteLine($"Count: {result}");
         }
 
-        private static async Task Sample11TransactionCommitAsync()
+        private static async Task SampleExecuteStoreProcedureAsync()
         {
-            Console.WriteLine("Sample11：TransactionCommit");
+            Console.WriteLine(nameof(SampleExecuteStoreProcedureAsync));
+            using var connection = new SqlConnection(connectionString);
+
+            string storeProcedureName = "CustOrderHist";
+
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("@CustomerID", "AROUT", DbType.String, ParameterDirection.Input);
+            parameters.Add("@return_value", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
+
+            await connection.ExecuteAsync(
+                storeProcedureName,
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            var result = parameters.Get<int>("return_value");
+            Console.WriteLine($"Count: {result}");
+        }
+
+        private static async Task SampleExecuteReaderAsync()
+        {
+            Console.WriteLine(nameof(SampleExecuteReaderAsync));
+            using var connection = new SqlConnection(connectionString);
+
+            string query = "SELECT * FROM Customers;";
+
+            var result = await connection.ExecuteReaderAsync(query);
+
+            DataTable table = new DataTable();
+            table.Load(result);
+
+            Console.WriteLine($"Count: {table.Rows.Count}");
+        }
+
+        private static async Task SampleExecuteReaderStoreProcedureAsync()
+        {
+            Console.WriteLine(nameof(SampleExecuteReaderStoreProcedureAsync));
+            using var connection = new SqlConnection(connectionString);
+
+            string storeProcedureName = "CustOrderHist";
+
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("@CustomerID", "AROUT", DbType.String, ParameterDirection.Input);
+
+            var result = await connection.ExecuteReaderAsync(
+                storeProcedureName,
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            DataTable table = new DataTable();
+            table.Load(result);
+
+            Console.WriteLine($"Count: {table.Rows.Count}");
+        }
+
+        private static async Task SampleExecuteScalarReaderAsync()
+        {
+            Console.WriteLine(nameof(SampleExecuteScalarReaderAsync));
+            using var connection = new SqlConnection(connectionString);
+
+            string query = "SELECT * FROM Customers;";
+
+            var result = await connection.ExecuteScalarAsync(query);
+
+            Console.WriteLine($"First Row First Column: {result}");
+        }
+
+        private static async Task SampleTransactionCommitAsync()
+        {
+            Console.WriteLine(nameof(SampleTransactionCommitAsync));
             using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            string executeString = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
-            string queryString = "SELECT * FROM Customers WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName";
+            string executeString = "INSERT INTO Customers(CustomerID, CompanyName) " +
+                "VALUES (@CustomerID, @CompanyName)";
+            string queryString = "SELECT * FROM Customers " +
+                "WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName";
 
             var data = new
             {
@@ -238,14 +289,16 @@ namespace DapperDemo
             Console.WriteLine($"在交易外查詢新增的資料：{customer.Count()} 筆。");
         }
 
-        private static async Task Sample12TransactionRollbackAsync()
+        private static async Task SampleTransactionRollbackAsync()
         {
-            Console.WriteLine("Sample12：TransactionRollback");
+            Console.WriteLine(nameof(SampleTransactionRollbackAsync));
             using var connection = new SqlConnection(connectionString);
             await connection.OpenAsync();
 
-            string executeString = "INSERT INTO Customers(CustomerID, CompanyName) VALUES (@CustomerID, @CompanyName)";
-            string queryString = "SELECT * FROM Customers WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName";
+            string executeString = "INSERT INTO Customers(CustomerID, CompanyName) " +
+                "VALUES (@CustomerID, @CompanyName)";
+            string queryString = "SELECT * FROM Customers " +
+                "WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName";
 
             var data = new
             {
@@ -262,6 +315,28 @@ namespace DapperDemo
 
             customer = await connection.QueryAsync<Customer>(queryString, data);
             Console.WriteLine($"在交易外查詢新增的資料：{customer.Count()} 筆。");
+        }
+
+        private static async Task SampleConcurrencyAsync()
+        {
+            Console.WriteLine(nameof(SampleTransactionRollbackAsync));
+            using var connection = new SqlConnection(connectionString);
+
+            string queryString = "SELECT * FROM Customers";
+
+            string updateString = "UPDATE Customers SET ContactName = @ContactName " +
+                      "WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName " +
+                      "AND RowVer = @RowVer";
+
+            var customer = await connection.QueryFirstAsync<Customer>(queryString);
+            customer.ContactName = "Test Contact";
+            var result = await connection.ExecuteAsync(updateString, customer);
+
+            Console.WriteLine($"Count: {result}");
+
+            result = await connection.ExecuteAsync(updateString, customer);
+
+            Console.WriteLine($"Count: {result}");
         }
     }
 }
