@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-using DapperDemo.Model;
+using DapperDemo.Models;
 using Microsoft.Extensions.Configuration;
 
 namespace DapperDemo
@@ -24,13 +24,22 @@ namespace DapperDemo
             await SampleConcurrencyAsync();
         }
 
+
+        private static void GenerateAllTableClass()
+        {
+            using var connection = new SqlConnection(connectionString);
+
+            var result = connection.GenerateAllTables();
+            Console.WriteLine(result);
+        }
+
         private static async Task SampleEasyQueryAsync()
         {
             Console.WriteLine(nameof(SampleEasyQueryAsync));
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers;";
-            var customers = await connection.QueryAsync<Customer>(query);
+            var customers = await connection.QueryAsync<Customers>(query);
             foreach (var customer in customers)
             {
                 Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
@@ -44,7 +53,7 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customers = await connection.QueryAsync<Customer>(query, new { City = "London" });
+            var customers = await connection.QueryAsync<Customers>(query, new { City = "London" });
 
             foreach (var customer in customers)
             {
@@ -59,7 +68,7 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customer = await connection.QueryFirstAsync<Customer>(query,
+            var customer = await connection.QueryFirstAsync<Customers>(query,
                 new
                 {
                     City = "London"
@@ -74,7 +83,7 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customer = await connection.QueryFirstOrDefaultAsync<Customer>(query,
+            var customer = await connection.QueryFirstOrDefaultAsync<Customers>(query,
                 new
                 {
                     City = "London7"
@@ -96,7 +105,7 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City AND PostalCode = @PostalCode;";
-            var customer = await connection.QuerySingleAsync<Customer>(query,
+            var customer = await connection.QuerySingleAsync<Customers>(query,
                 new
                 {
                     City = "London",
@@ -112,7 +121,7 @@ namespace DapperDemo
             using var connection = new SqlConnection(connectionString);
 
             string query = "SELECT * FROM Customers WHERE City = @City;";
-            var customer = await connection.QuerySingleOrDefaultAsync<Customer>(query,
+            var customer = await connection.QuerySingleOrDefaultAsync<Customers>(query,
                 new
                 {
                     City = "London7"
@@ -143,7 +152,7 @@ namespace DapperDemo
 
             while (!result.IsConsumed)
             {
-                var customers = await result.ReadAsync<Customer>();
+                var customers = await result.ReadAsync<Customers>();
                 foreach (var customer in customers)
                 {
                     Console.WriteLine($"{nameof(customer.CompanyName)}: {customer.CompanyName}");
@@ -281,11 +290,11 @@ namespace DapperDemo
             using var transaction = await connection.BeginTransactionAsync();
             var insert = await connection.ExecuteAsync(executeString, data, transaction);
             Console.WriteLine($"在交易中對 Customer 表插入 {insert} 筆資料。");
-            var customer = await connection.QueryAsync<Customer>(queryString, data, transaction);
+            var customer = await connection.QueryAsync<Customers>(queryString, data, transaction);
             Console.WriteLine($"在交易中查詢新增的資料：{customer.Count()} 筆。");
             await transaction.CommitAsync();
 
-            customer = await connection.QueryAsync<Customer>(queryString, data);
+            customer = await connection.QueryAsync<Customers>(queryString, data);
             Console.WriteLine($"在交易外查詢新增的資料：{customer.Count()} 筆。");
         }
 
@@ -309,11 +318,11 @@ namespace DapperDemo
             using var transaction = await connection.BeginTransactionAsync();
             var insert = await connection.ExecuteAsync(executeString, data, transaction);
             Console.WriteLine($"在交易中對 Customer 表插入 {insert} 筆資料。");
-            var customer = await connection.QueryAsync<Customer>(queryString, data, transaction);
+            var customer = await connection.QueryAsync<Customers>(queryString, data, transaction);
             Console.WriteLine($"在交易中查詢新增的資料：{customer.Count()} 筆。");
             await transaction.RollbackAsync();
 
-            customer = await connection.QueryAsync<Customer>(queryString, data);
+            customer = await connection.QueryAsync<Customers>(queryString, data);
             Console.WriteLine($"在交易外查詢新增的資料：{customer.Count()} 筆。");
         }
 
@@ -328,7 +337,7 @@ namespace DapperDemo
                       "WHERE CustomerID = @CustomerID AND CompanyName = @CompanyName " +
                       "AND RowVer = @RowVer";
 
-            var customer = await connection.QueryFirstAsync<Customer>(queryString);
+            var customer = await connection.QueryFirstAsync<Customers>(queryString);
             customer.ContactName = "Test Contact";
             var result = await connection.ExecuteAsync(updateString, customer);
 
